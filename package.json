@@ -1,0 +1,19 @@
+{
+  "name": "eeccoo-monitor",
+  "version": "1.0.0",
+  "description": "Smart Farm Monitor - Sustainable Agriculture Platform",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["agriculture", "iot", "smart-farm"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.14.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "multer": "^2.1.1"
+  }
+}

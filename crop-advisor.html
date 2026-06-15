@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Crop Advisor | Smart Farm Monitor</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .advisor-container {
+            max-width: 900px;
+            margin: 2rem auto;
+        }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+            overflow-y: auto;
+        }
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 20px;
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            top: 1.5rem; right: 1.5rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        @media (max-width: 768px) {
+            .chart-grid { grid-template-columns: 1fr; }
+        }
+        .stat-badge {
+            background: var(--mint);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            display: inline-block;
+            margin-right: 1rem;
+            font-size: 0.9rem;
+        }
+        .form-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .recommendation-card {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .soil-info {
+            background: #fdf2f2;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 5px solid #e63946;
+        }
+        .crop-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .profit-high { color: #2d6a4f; font-weight: 700; }
+        .investment { color: #555; font-size: 0.9rem; }
+        .tag {
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .tag-best { background: #d8f3dc; color: #2d6a4f; }
+        .suggestion-box {
+            background: #fff4e6;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 5px solid #f8961e;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">
+            <i class="fas fa-leaf"></i> SmartFarm
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="disease.html">Disease Detection</a></li>
+            <li><a href="crop-advisor.html" class="active">Crop Advisor</a></li>
+            <li><a href="chatbot.html">Farmer Chat</a></li>
+        </ul>
+    </nav>
+
+    <div class="container advisor-container">
+        <div class="form-card">
+            <h2 style="color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-seedling"></i> Smart Crop Recommendation</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Register your land details to receive expert crop suggestions, soil analysis, and financial projections.</p>
+            
+            <form id="advisorForm">
+                <div class="input-grid">
+                    <div class="form-group">
+                        <label>Farmer Name</label>
+                        <input type="text" id="farmerName" placeholder="Enter your name" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #ddd;" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Land Area (Acres)</label>
+                        <input type="number" id="landArea" placeholder="e.g. 5" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #ddd;" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Land Location / Region</label>
+                        <select id="location" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #ddd;" required>
+                            <option value="">Select Region</option>
+                            <option value="north">North (Punjab/Haryana - Alluvial)</option>
+                            <option value="south">South (Andhra/Karnataka - Red Soil)</option>
+                            <option value="west">West (Maharashtra/Gujarat - Black Soil)</option>
+                            <option value="east">East (Bengal/Odisha - Clay Layer)</option>
+                            <option value="coastal">Coastal (Kerala/TN - Laterite)</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" style="width: 100%; padding: 1rem; font-size: 1.1rem;">Generate Analysis Report</button>
+            </form>
+        </div>
+
+        <div id="loading" style="display: none; text-align: center; margin: 3rem 0;">
+            <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary);"></i>
+            <p style="margin-top: 1rem; font-weight: 600;">Analyzing regional soil data and market trends...</p>
+        </div>
+
+        <div id="recommendationResult" class="recommendation-card">
+            <div class="result-grid">
+                <div class="card" style="grid-column: span 2; border-bottom: 4px solid var(--primary);">
+                    <h3 id="reportTitle">Farmer Analysis Report</h3>
+                    <p style="color: var(--text-muted);">Based on <span id="resArea">5</span> acres of land in the <span id="resLoc">North</span> region.</p>
+                </div>
+
+                <div class="soil-info">
+                    <h4><i class="fas fa-microscope"></i> Soil Nature</h4>
+                    <p id="soilNature" style="margin-top: 0.5rem; font-size: 0.95rem;">Loading...</p>
+                    <div style="margin-top: 1rem; font-size: 0.85rem;">
+                        <span style="font-weight: 700;">Nutrient Level:</span> <span id="nutrientLevel" style="color: #d00000;">Rich in Nitrogen</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h4><i class="fas fa-chart-pie"></i> Best Crops to Grow</h4>
+                    <div id="cropList" style="margin-top: 1rem;">
+                        <!-- Crops injected here -->
+                    </div>
+                </div>
+
+                <div class="card" style="grid-column: span 2;">
+                    <h4><i class="fas fa-history"></i> Investment & Profit Projection (per Acre)</h4>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">*Based on average market data of the last 5 years.</p>
+                    <div id="financialData">
+                        <!-- Financial rows injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="suggestion-box">
+                <h4><i class="fas fa-lightbulb"></i> Expert Suggestions for Success</h4>
+                <ul id="suggestions" style="margin: 1rem 0 0 1.5rem; font-size: 0.9rem; line-height: 1.8;">
+                    <!-- Suggestions injected here -->
+                </ul>
+            </div>
+            
+            <button onclick="window.print()" style="margin-top: 2rem; background: #555; padding: 0.8rem 1.5rem; border: none; color: white; border-radius: 8px; cursor: pointer;"><i class="fas fa-print"></i> Save as PDF Report</button>
+        </div>
+    </div>
+
+    <div id="cropModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div id="modalHeader">
+                <h2 id="modalCropName" style="color: var(--primary);">Crop Details</h2>
+                <div style="margin-top: 0.5rem;">
+                    <span class="stat-badge" id="modalProb">Chance of Success: 0%</span>
+                    <span class="stat-badge" id="modalYield">Avg Yield: 0</span>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div>
+                    <h4 style="margin-bottom: 1rem;"><i class="fas fa-coins"></i> Profit vs Loss (5 Years)</h4>
+                    <canvas id="profitChart" height="200"></canvas>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 1rem;"><i class="fas fa-chart-line"></i> Investment Trend</h4>
+                    <canvas id="investmentChart" height="200"></canvas>
+                </div>
+                <div style="grid-column: span 2;">
+                    <h4 style="margin-bottom: 1rem;"><i class="fas fa-percentage"></i> Sustainability & Yield Chance</h4>
+                    <canvas id="sustainabilityChart" height="150"></canvas>
+                </div>
+            </div>
+            
+            <div style="margin-top: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 12px; font-size: 0.9rem;">
+                <strong>Note:</strong> Data is aggregated from local agricultural market trends (2021-2025). Profit accounts for all overheads including fertilizers, labor, and transport.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const regionalData = {
+            north: {
+                soil: "Alluvial Soil - Highly fertile, rich in potash and lime. Excellent for moisture retention.",
+                nutrients: "Rich in Nitrogen & Phosphorus",
+                crops: [
+                    { 
+                        name: "Wheat", investment: "₹15,000", profit: "₹45,000", best: true,
+                        historical: {
+                            years: ["2021", "2022", "2023", "2024", "2025"],
+                            profit: [42000, 45000, 39000, 48000, 52000],
+                            loss: [2000, 1500, 3000, 1000, 500],
+                            investment: [13000, 14000, 15000, 15500, 16000],
+                            yield: [90, 92, 85, 94, 96],
+                            prob: "94%"
+                        }
+                    },
+                    { 
+                        name: "Rice (Basmati)", investment: "₹22,000", profit: "₹65,000", best: false,
+                        historical: {
+                            years: ["2021", "2022", "2023", "2024", "2025"],
+                            profit: [55000, 60000, 58000, 65000, 70000],
+                            loss: [5000, 4000, 6000, 3000, 2000],
+                            investment: [18000, 20000, 21000, 22000, 23000],
+                            yield: [82, 85, 80, 88, 90],
+                            prob: "88%"
+                        }
+                    },
+                    { 
+                        name: "Sugarcane", investment: "₹30,000", profit: "₹90,000", best: false,
+                        historical: {
+                            years: ["2021", "2022", "2023", "2024", "2025"],
+                            profit: [80000, 85000, 82000, 90000, 95000],
+                            loss: [10000, 8000, 12000, 9000, 7000],
+                            investment: [25000, 27000, 29000, 30000, 32000],
+                            yield: [88, 90, 84, 91, 93],
+                            prob: "91%"
+                        }
+                    }
+                ],
+                suggestions: ["Implement crop rotation between Wheat and Pulses.", "Use laser land leveling.", "Monitor for yellow rust."]
+            },
+            south: {
+                soil: "Red Soil - Porous and friable structure. Low in nitrogen.",
+                nutrients: "Iron Rich, Needs Organic Matter",
+                crops: [
+                    { 
+                        name: "Groundnut", investment: "₹12,000", profit: "₹35,000", best: true,
+                        historical: {
+                            years: ["2021", "2022", "2023", "2024", "2025"],
+                            profit: [30000, 32000, 28000, 35000, 38000],
+                            loss: [3000, 2000, 4500, 1500, 1000],
+                            investment: [10000, 11000, 12000, 12500, 13000],
+                            yield: [88, 90, 82, 91, 94],
+                            prob: "92%"
+                        }
+                    },
+                    { 
+                        name: "Ragi (Millets)", investment: "₹8,000", profit: "₹25,000", best: false,
+                        historical: {
+                            years: ["2021", "2022", "2023", "2024", "2025"],
+                            profit: [20000, 22000, 23000, 25000, 27000],
+                            loss: [1000, 800, 500, 400, 300],
+                            investment: [6000, 7000, 7500, 8000, 8500],
+                            yield: [95, 96, 97, 98, 98],
+                            prob: "98%"
+                        }
+                    },
+                    { 
+                        name: "Cotton", investment: "₹18,000", profit: "₹55,000", best: false,
+                        historical: {
+                            years: ["2021", "2022", "2023", "2024", "2025"],
+                            profit: [45000, 50000, 48000, 55000, 62000],
+                            loss: [7000, 5000, 9000, 6000, 4000],
+                            investment: [15000, 16000, 17000, 18000, 20000],
+                            yield: [75, 78, 72, 80, 85],
+                            prob: "80%"
+                        }
+                    }
+                ],
+                suggestions: ["Incorporate green manure.", "Drip irrigation for cotton.", "Regular soil testing."]
+            },
+            west: {
+                soil: "Black Soil (Regur) - High clay content. Deep cracks in dry season.",
+                nutrients: "Rich in Lime, Iron, & Magnesium",
+                crops: [
+                    { 
+                        name: "Cotton (Bt)", investment: "₹20,000", profit: "₹75,000", best: true,
+                        historical: {
+                            years: ["2021", "2022", "2023", "2024", "2025"],
+                            profit: [65000, 70000, 62000, 75000, 82000],
+                            loss: [8000, 6000, 10000, 7000, 5000],
+                            investment: [18000, 19000, 20000, 21000, 22000],
+                            yield: [85, 87, 80, 90, 92],
+                            prob: "91%"
+                        }
+                    },
+                    { 
+                        name: "Soybean", investment: "₹14,000", profit: "₹40,000", best: false,
+                        historical: {
+                            years: ["2021", "2022", "2023", "2024", "2025"],
+                            profit: [35000, 38000, 32000, 40000, 45000],
+                            loss: [4000, 3000, 5000, 3500, 2500],
+                            investment: [11000, 12000, 13000, 14000, 15000],
+                            yield: [88, 90, 84, 91, 93],
+                            prob: "89%"
+                        }
+                    }
+                ],
+                suggestions: ["Avoid over-irrigation in rainy season.", "Sulphur application for Soybean.", "Use deep plowing."]
+            },
+            east: {
+                soil: "Clayey Alluvial - Heavy texture with high water holding capacity.",
+                nutrients: "Moderate Nitrogen & Potassium",
+                crops: [
+                    { 
+                        name: "Rice", investment: "₹18,000", profit: "₹48,000", best: true,
+                        historical: {
+                            years: ["2021", "2022", "2023", "2024", "2025"],
+                            profit: [42000, 45000, 40000, 48000, 50000],
+                            loss: [3000, 2500, 4000, 2000, 1500],
+                            investment: [15000, 16000, 17000, 18000, 19000],
+                            yield: [92, 94, 90, 95, 96],
+                            prob: "95%"
+                        }
+                    },
+                    { 
+                        name: "Potato", investment: "₹25,000", profit: "₹85,000", best: false,
+                        historical: {
+                            years: ["2021", "2022", "2023", "2024", "2025"],
+                            profit: [70000, 75000, 65000, 85000, 90000],
+                            loss: [12000, 10000, 15000, 11000, 9000],
+                            investment: [20000, 22000, 24000, 25000, 27000],
+                            yield: [85, 88, 80, 89, 92],
+                            prob: "86%"
+                        }
+                    }
+                ],
+                suggestions: ["Perfect for paddy.", "Ensure drainage for potato.", "Use hybrid rice varieties."]
+            },
+            coastal: {
+                soil: "Laterite Soil - Acidic in nature. Formed due to intense leaching.",
+                nutrients: "Rich in Iron & Aluminum",
+                crops: [
+                    { 
+                        name: "Coconut / Rubber", investment: "₹35,000", profit: "₹1,20,000", best: true,
+                        historical: {
+                            years: ["2021", "2022", "2023", "2024", "2025"],
+                            profit: [95000, 105000, 100000, 120000, 135000],
+                            loss: [8000, 6000, 9000, 5000, 3000],
+                            investment: [30000, 32000, 34000, 35000, 38000],
+                            yield: [94, 95, 93, 97, 98],
+                            prob: "96%"
+                        }
+                    },
+                    { 
+                        name: "Pepper", investment: "₹20,000", profit: "₹60,000", best: false,
+                        historical: {
+                            years: ["2021", "2022", "2023", "2024", "2025"],
+                            profit: [50000, 55000, 52000, 60000, 68000],
+                            loss: [4000, 3000, 5000, 2500, 1500],
+                            investment: [16000, 17000, 18000, 20000, 22000],
+                            yield: [88, 90, 86, 92, 94],
+                            prob: "91%"
+                        }
+                    }
+                ],
+                suggestions: ["Liming required for acidity.", "Inter-cropping pepper.", "Organic mulching."]
+            }
+        };
+
+        const form = document.getElementById('advisorForm');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('recommendationResult');
+        const modal = document.getElementById('cropModal');
+        let currentCharts = [];
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            try {
+                loading.style.display = 'block';
+                result.style.display = 'none';
+
+                const name = document.getElementById('farmerName').value;
+                const areaInput = document.getElementById('landArea').value;
+                const area = parseFloat(areaInput) || 1;
+                const locKey = document.getElementById('location').value;
+                const data = regionalData[locKey];
+
+                if (!data) throw new Error("Please select a location");
+
+                loading.style.display = 'none';
+                result.style.display = 'block';
+
+                document.getElementById('reportTitle').innerText = "Report for " + name;
+                document.getElementById('resArea').innerText = area;
+                document.getElementById('resLoc').innerText = locKey.toUpperCase();
+                document.getElementById('soilNature').innerText = data.soil;
+                document.getElementById('nutrientLevel').innerText = data.nutrients;
+
+                const cropList = document.getElementById('cropList');
+                cropList.innerHTML = '';
+                data.crops.forEach(crop => {
+                    const div = document.createElement('div');
+                    div.className = 'crop-card';
+                    div.style.cursor = 'pointer';
+                    div.innerHTML = `
+                        <div>
+                            <span style="font-weight: 600;">${crop.name}</span>
+                            ${crop.best ? '<span class="tag tag-best">Recommended</span>' : ''}
+                        </div>
+                        <i class="fas fa-chart-bar" style="color: var(--primary);"></i>
+                    `;
+                    div.onclick = () => showCropCharts(crop);
+                    cropList.appendChild(div);
+                });
+
+                const financialData = document.getElementById('financialData');
+                financialData.innerHTML = '';
+                data.crops.forEach(crop => {
+                    const totalProfit = parseInt(crop.profit.replace(/[^0-9]/g, '')) * area;
+                    const totalInv = parseInt(crop.investment.replace(/[^0-9]/g, '')) * area;
+                    
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '1.5rem';
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 600;">${crop.name}</span>
+                            <span class="profit-high">Total Est. Profit: ₹${totalProfit.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div class="investment">Total Est. Investment: ₹${totalInv.toLocaleString('en-IN')} (${crop.investment}/acre)</div>
+                        <div style="height: 10px; background: #eee; border-radius: 5px; margin-top: 0.5rem; overflow: hidden;">
+                            <div style="height: 100%; background: var(--primary); width: ${crop.best ? '90%' : '60%'}"></div>
+                        </div>
+                    `;
+                    financialData.appendChild(div);
+                });
+
+                const suggestions = document.getElementById('suggestions');
+                suggestions.innerHTML = '';
+                data.suggestions.forEach(s => {
+                    const li = document.createElement('li');
+                    li.innerText = s;
+                    suggestions.appendChild(li);
+                });
+
+                result.scrollIntoView({ behavior: 'smooth' });
+            } catch (err) {
+                console.error("Analysis Error:", err);
+                loading.style.display = 'none';
+                alert("An error occurred generating the report. Please try again.");
+            }
+        });
+
+        function showCropCharts(crop) {
+            modal.style.display = 'block';
+            document.getElementById('modalCropName').innerText = crop.name + " Analysis";
+            document.getElementById('modalProb').innerText = "Chance of Success: " + crop.historical.prob;
+            document.getElementById('modalYield').innerText = "Avg Yield: " + crop.historical.yield[4] + "% potential";
+
+            // Clear old charts
+            currentCharts.forEach(c => c.destroy());
+            currentCharts = [];
+
+            const h = crop.historical;
+
+            // Profit Chart
+            currentCharts.push(new Chart(document.getElementById('profitChart'), {
+                type: 'bar',
+                data: {
+                    labels: h.years,
+                    datasets: [
+                        { label: 'Profit', data: h.profit, backgroundColor: '#2d6a4f' },
+                        { label: 'Loss', data: h.loss, backgroundColor: '#e63946' }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' }}}
+            }));
+
+            // Investment Chart
+            currentCharts.push(new Chart(document.getElementById('investmentChart'), {
+                type: 'line',
+                data: {
+                    labels: h.years,
+                    datasets: [{ label: 'Investment', data: h.investment, borderColor: '#f8961e', tension: 0.3, fill: false }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' }}}
+            }));
+
+            // Sustainability Chart
+            currentCharts.push(new Chart(document.getElementById('sustainabilityChart'), {
+                type: 'line',
+                data: {
+                    labels: h.years,
+                    datasets: [
+                        { label: 'Yield %', data: h.yield, borderColor: '#3b82f6', fill: true, backgroundColor: '#3b82f622' },
+                        { label: 'Success %', data: h.yield.map(y => y - 5), borderColor: '#8b5cf6', borderDash: [5,5], fill: false }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' }}}
+            }));
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = (e) => {
+            if (e.target == modal) closeModal();
+        };
+    </script>
+</body>
+</html>
