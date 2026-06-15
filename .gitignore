@@ -3,3 +3,6 @@ uploads/
 .vscode/
 .DS_Store
 *.log
+database.sqlite
+database.sqlite-journal
+

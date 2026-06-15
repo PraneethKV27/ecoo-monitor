@@ -7,13 +7,20 @@
     "start": "node backend/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["agriculture", "iot", "smart-farm"],
+  "keywords": [
+    "agriculture",
+    "iot",
+    "smart-farm"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.14.0",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "multer": "^2.1.1"
+    "multer": "^2.1.1",
+    "simple-statistics": "^7.9.0",
+    "sqlite3": "^6.0.1"
   }
 }
